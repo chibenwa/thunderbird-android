@@ -26,6 +26,25 @@
             android:theme="@style/Theme.Thunderbird.DayNight.Dialog.Translucent"
             />
 
+        <activity
+            android:name="net.openid.appauth.RedirectUriReceiverActivity"
+            android:exported="true"
+            >
+
+            <!-- Redirect URI registered for the Linagora (teammail-mobile) OpenID Connect client -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="teammail.mobile"
+                    android:host="oauthredirect"
+                    />
+            </intent-filter>
+        </activity>
+
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"

@@ -15,6 +15,7 @@ class TbOAuthConfigurationFactory : OAuthConfigurationFactory {
             createYahooConfiguration(),
             createThundermailConfiguration(),
             createThundermailStageConfiguration(),
+            createLinagoraConfiguration(),
         )
     }
 
@@ -114,5 +115,17 @@ class TbOAuthConfigurationFactory : OAuthConfigurationFactory {
             authorizationEndpoint = "https://auth-stage.tb.pro/realms/tbpro/protocol/openid-connect/auth",
             tokenEndpoint = "https://auth-stage.tb.pro/realms/tbpro/protocol/openid-connect/token",
             redirectUri = "${BuildConfig.APPLICATION_ID}://oauth2redirect",
+        )
+
+    private fun createLinagoraConfiguration(): Pair<List<String>, OAuthConfiguration> =
+        listOf(
+            "imap.linagora.com",
+            "smtp.linagora.com",
+        ) to OAuthConfiguration(
+            clientId = "teammail-mobile",
+            scopes = listOf("openid", "profile", "email", "offline_access"),
+            authorizationEndpoint = "https://sso.linagora.com/oauth2/authorize",
+            tokenEndpoint = "https://sso.linagora.com/oauth2/token",
+            redirectUri = "teammail.mobile://oauthredirect",
         )
 }
