@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 import net.openid.appauth.AuthState
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationException.AuthorizationRequestErrors
-import net.openid.appauth.AuthorizationException.GeneralErrors
+import net.openid.appauth.AuthorizationException.TokenRequestErrors
 import net.openid.appauth.AuthorizationService
 import net.thunderbird.legacy.logging.Log
 
@@ -75,25 +75,20 @@ class RealOAuth2TokenProvider(
 
             latch.await(timeoutMillis, TimeUnit.MILLISECONDS)
         } catch (e: Exception) {
-            Log.w(e, "Failed to fetch an access token. Clearing authorization state.")
-
-            authStateStorage.updateAuthorizationState(authorizationState = null)
-
-            throw AuthenticationFailedException(
-                message = "Failed to fetch an access token",
-                throwable = e,
-            )
+            throw IOException("Failed to fetch an access token", e)
         }
 
         val authException = exception
-        if (authException == GeneralErrors.NETWORK_ERROR ||
-            authException == GeneralErrors.SERVER_ERROR ||
-            authException == AuthorizationRequestErrors.SERVER_ERROR ||
-            authException == AuthorizationRequestErrors.TEMPORARILY_UNAVAILABLE
-        ) {
-            throw IOException("Error while fetching an access token", authException)
-        } else if (authException != null) {
-            authStateStorage.updateAuthorizationState(authorizationState = null)
+        if (authException != null) {
+            when (authException.toTokenErrorKind()) {
+                TokenErrorKind.TRANSIENT -> throw IOException("Error while fetching an access token", authException)
+                TokenErrorKind.AUTHENTICATION_FAILED -> Unit
+                TokenErrorKind.LOGIN_REQUIRED -> {
+                    Log.w(authException, "Refresh token rejected. Clearing authorization state.")
+
+                    authStateStorage.updateAuthorizationState(authorizationState = null)
+                }
+            }
 
             throw AuthenticationFailedException(
                 message = "Failed to fetch an access token",
@@ -117,5 +112,37 @@ class RealOAuth2TokenProvider(
             .getAuthorizationState()
             ?.let { AuthState.jsonDeserialize(it) }
             ?: throw AuthenticationFailedException("Login required")
+    }
+}
+
+internal enum class TokenErrorKind {
+    /** Network, server or proxy failure: keep the authorization state and retry later. */
+    TRANSIENT,
+
+    /** Explicit OAuth error that does not invalidate the refresh token. */
+    AUTHENTICATION_FAILED,
+
+    /** The refresh token can no longer be used: the user has to sign in again. */
+    LOGIN_REQUIRED,
+}
+
+internal fun AuthorizationException.toTokenErrorKind(): TokenErrorKind {
+    return when (this) {
+        TokenRequestErrors.INVALID_GRANT,
+        // AppAuth's error when the access token has expired and there is no refresh token
+        AuthorizationRequestErrors.CLIENT_ERROR,
+        -> TokenErrorKind.LOGIN_REQUIRED
+
+        TokenRequestErrors.INVALID_REQUEST,
+        TokenRequestErrors.INVALID_CLIENT,
+        TokenRequestErrors.UNAUTHORIZED_CLIENT,
+        TokenRequestErrors.UNSUPPORTED_GRANT_TYPE,
+        TokenRequestErrors.INVALID_SCOPE,
+        TokenRequestErrors.CLIENT_ERROR,
+        -> TokenErrorKind.AUTHENTICATION_FAILED
+
+        // Includes 5xx pages that are not JSON (JSON_DESERIALIZATION_ERROR) and unknown error codes such as
+        // server_error or temporarily_unavailable (TokenRequestErrors.OTHER)
+        else -> TokenErrorKind.TRANSIENT
     }
 }
