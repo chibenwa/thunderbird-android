@@ -13,13 +13,13 @@ android {
     namespace = "net.thunderbird.android"
 
     defaultConfig {
-        applicationId = "net.thunderbird.android"
-        testApplicationId = "net.thunderbird.android.tests"
+        applicationId = "com.linagora.tb"
+        testApplicationId = "com.linagora.tb.tests"
 
         versionCode = 4
         versionName = "25.0"
 
-        buildConfigField("String", "CLIENT_INFO_APP_NAME", "\"Thunderbird for Android\"")
+        buildConfigField("String", "CLIENT_INFO_APP_NAME", "\"Thunderbird OIDC for Android\"")
     }
 
     androidResources {
