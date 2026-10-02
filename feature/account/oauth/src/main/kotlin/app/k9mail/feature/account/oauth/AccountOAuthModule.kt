@@ -2,11 +2,13 @@ package app.k9mail.feature.account.oauth
 
 import app.k9mail.feature.account.oauth.data.AuthorizationRepository
 import app.k9mail.feature.account.oauth.data.AuthorizationStateRepository
+import app.k9mail.feature.account.oauth.data.TokenRevocationRepository
 import app.k9mail.feature.account.oauth.domain.AccountOAuthDomainContract
 import app.k9mail.feature.account.oauth.domain.AccountOAuthDomainContract.UseCase
 import app.k9mail.feature.account.oauth.domain.usecase.CheckIsGoogleSignIn
 import app.k9mail.feature.account.oauth.domain.usecase.FinishOAuthSignIn
 import app.k9mail.feature.account.oauth.domain.usecase.GetOAuthRequestIntent
+import app.k9mail.feature.account.oauth.domain.usecase.RevokeOAuthTokens
 import app.k9mail.feature.account.oauth.ui.AccountOAuthContract
 import app.k9mail.feature.account.oauth.ui.AccountOAuthViewModel
 import net.openid.appauth.AuthorizationService
@@ -44,6 +46,15 @@ val featureAccountOAuthModule: Module = module {
     factory<UseCase.FinishOAuthSignIn> { FinishOAuthSignIn(repository = get()) }
 
     factory<UseCase.CheckIsGoogleSignIn> { CheckIsGoogleSignIn() }
+
+    factory<AccountOAuthDomainContract.TokenRevocationRepository> { TokenRevocationRepository() }
+
+    factory<UseCase.RevokeOAuthTokens> {
+        RevokeOAuthTokens(
+            repository = get(),
+            configurationProvider = get(),
+        )
+    }
 
     factory<AccountOAuthContract.ViewModel> {
         AccountOAuthViewModel(

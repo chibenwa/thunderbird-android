@@ -22,6 +22,14 @@ interface AccountOAuthDomainContract {
         fun interface CheckIsGoogleSignIn {
             fun execute(hostname: String): Boolean
         }
+
+        fun interface RevokeOAuthTokens {
+            /**
+             * Revokes the tokens of [authorizationState] if the OAuth configuration of [hostname] has a revocation
+             * endpoint.
+             */
+            suspend fun execute(hostname: String, authorizationState: String)
+        }
     }
 
     interface AuthorizationRepository {
@@ -38,5 +46,12 @@ interface AccountOAuthDomainContract {
 
     fun interface AuthorizationStateRepository {
         fun isAuthorized(authorizationState: AuthorizationState): Boolean
+    }
+
+    fun interface TokenRevocationRepository {
+        /**
+         * Sends a token revocation request (RFC 7009) for a public client.
+         */
+        suspend fun revoke(revocationEndpoint: String, clientId: String, token: String, tokenTypeHint: String)
     }
 }

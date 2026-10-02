@@ -1,5 +1,6 @@
 package net.thunderbird.app.common.feature.account
 
+import app.k9mail.feature.account.oauth.domain.AccountOAuthDomainContract.UseCase.RevokeOAuthTokens
 import com.fsck.k9.Core
 import com.fsck.k9.LocalKeyStoreManager
 import com.fsck.k9.Preferences
@@ -24,6 +25,7 @@ class AccountRemover(
     private val preferences: Preferences,
     private val unifiedInboxConfigurator: UnifiedInboxConfigurator,
     private val avatarImageRepository: AvatarImageRepository,
+    private val revokeOAuthTokens: RevokeOAuthTokens,
     private val logger: Logger,
 ) {
 
@@ -41,6 +43,7 @@ class AccountRemover(
         removeLocalStore(account)
         messagingController.deleteAccount(account)
         removeBackend(account)
+        revokeTokens(account)
 
         preferences.deleteAccount(account)
 
@@ -80,6 +83,19 @@ class AccountRemover(
             backendManager.removeBackend(account.id)
         } catch (e: Exception) {
             logger.error(throwable = e) { "Failed to reset remote store for account $account" }
+        }
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private fun revokeTokens(account: LegacyAccountDto) {
+        val authorizationState = account.oAuthState ?: return
+
+        runBlocking {
+            try {
+                revokeOAuthTokens.execute(account.incomingServerSettings.host, authorizationState)
+            } catch (e: Exception) {
+                logger.error(throwable = e) { "Failed to revoke OAuth tokens for account ${account.uuid}" }
+            }
         }
     }
 

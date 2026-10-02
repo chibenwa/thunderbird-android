@@ -14,6 +14,7 @@ internal val appCommonFeatureAccountModule = module {
             preferences = get(),
             unifiedInboxConfigurator = get(),
             avatarImageRepository = get(),
+            revokeOAuthTokens = get(),
             logger = get(),
         )
     }

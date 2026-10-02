@@ -6,4 +6,5 @@ data class OAuthConfiguration(
     val authorizationEndpoint: String,
     val tokenEndpoint: String,
     val redirectUri: String,
+    val revocationEndpoint: String? = null,
 )

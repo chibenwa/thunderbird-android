@@ -127,5 +127,6 @@ class TbOAuthConfigurationFactory : OAuthConfigurationFactory {
             authorizationEndpoint = "https://sso.linagora.com/oauth2/authorize",
             tokenEndpoint = "https://sso.linagora.com/oauth2/token",
             redirectUri = "${BuildConfig.APPLICATION_ID}://oauth2redirect",
+            revocationEndpoint = "https://sso.linagora.com/oauth2/revoke",
         )
 }
