@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - linagora
   pull_request:
     paths-ignore:
       - '.idea/**'
@@ -18,7 +19,7 @@ on:
 
 concurrency:
   group: quality-checks-${{ github.ref }}-${{ github.event.pull_request.number || 'no-pr' }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/linagora' }}
 
 permissions:
   contents: read
