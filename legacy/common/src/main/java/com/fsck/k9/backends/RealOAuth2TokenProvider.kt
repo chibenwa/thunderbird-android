@@ -50,8 +50,14 @@ class RealOAuth2TokenProvider(
             }
         }
 
-    @Suppress("TooGenericExceptionCaught")
     override fun getToken(timeoutMillis: Long): String {
+        // Each provider reads the state from storage. Without this lock, IMAP connections and SMTP can refresh with
+        // the same refresh token at the same time, and all but one get invalid_grant when the OP rotates it.
+        return synchronized(TOKEN_LOCK) { fetchToken(timeoutMillis) }
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private fun fetchToken(timeoutMillis: Long): String {
         val latch = CountDownLatch(1)
         var token: String? = null
         var exception: AuthorizationException? = null
@@ -116,6 +122,10 @@ class RealOAuth2TokenProvider(
             .getAuthorizationState()
             ?.let { AuthState.jsonDeserialize(it) }
             ?: throw AuthenticationFailedException("Login required")
+    }
+
+    private companion object {
+        val TOKEN_LOCK = Any()
     }
 }
 
