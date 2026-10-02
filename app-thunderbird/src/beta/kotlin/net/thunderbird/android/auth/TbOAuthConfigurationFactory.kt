@@ -126,6 +126,6 @@ class TbOAuthConfigurationFactory : OAuthConfigurationFactory {
             scopes = listOf("openid", "profile", "email", "offline_access"),
             authorizationEndpoint = "https://sso.linagora.com/oauth2/authorize",
             tokenEndpoint = "https://sso.linagora.com/oauth2/token",
-            redirectUri = "teammail.mobile://oauthredirect",
+            redirectUri = "${BuildConfig.APPLICATION_ID}://oauth2redirect",
         )
 }
