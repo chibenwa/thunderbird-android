@@ -63,7 +63,7 @@ class RealOAuth2TokenProvider(
 
         val oldAccessToken = authState.accessToken
 
-        try {
+        val completed = try {
             authState.performActionWithFreshTokens(
                 authService,
             ) { accessToken: String?, _, authException: AuthorizationException? ->
@@ -76,6 +76,10 @@ class RealOAuth2TokenProvider(
             latch.await(timeoutMillis, TimeUnit.MILLISECONDS)
         } catch (e: Exception) {
             throw IOException("Failed to fetch an access token", e)
+        }
+
+        if (!completed) {
+            throw IOException("Timed out while fetching an access token")
         }
 
         val authException = exception
